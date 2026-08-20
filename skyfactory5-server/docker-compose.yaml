@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  skyfactory5:
+    build: .
+    container_name: sf5_server
+    ports:
+      - "25565:25565"
+    volumes:
+      - ./data:/server
+    environment:
+      - SERVER_RAM=8G # İhtiyacınıza göre RAM miktarını artırabilirsiniz
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+  backup:
+    image: alpine:latest
+    container_name: sf5_backup
+    restart: unless-stopped
+    depends_on:
+      - skyfactory5
+    volumes:
+      - ./data:/server:ro
+      - ./backups:/backups
+    command: >
+      /bin/sh -c "
+        echo 'Yedekleme servisi basladi.';
+        while true; do
+          TIMESTAMP=$$(date +'%Y-%m-%d_%H-%M-%S');
+          echo \"Yedekleme basliyor: sf5-backup-$${TIMESTAMP}.tar.gz\";
+          tar -czf /backups/sf5-backup-$${TIMESTAMP}.tar.gz -C /server .;
+          echo \"Yedekleme tamamlandi. 7 gunden eski yedekler temizleniyor...\";
+          find /backups/ -type f -name '*.tar.gz' -mtime +7 -delete;
+          echo \"Beklemeye geciliyor (12 saat)...\";
+          sleep 43200;
+        done
+      "
