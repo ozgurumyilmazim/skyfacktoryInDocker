@@ -5,11 +5,12 @@ services:
     build: .
     container_name: sf5_server
     ports:
-      - "25565:25565"
+      # Sol taraf (.env'den gelen) makinenizin portu, sağ taraf (25565) container'ın iç portudur.
+      - "${HOST_PORT}:25565"
     volumes:
       - ./data:/server
     environment:
-      - SERVER_RAM=8G # İhtiyacınıza göre RAM miktarını artırabilirsiniz
+      - SERVER_RAM=${SERVER_RAM}
     stdin_open: true
     tty: true
     restart: unless-stopped
@@ -23,16 +24,20 @@ services:
     volumes:
       - ./data:/server:ro
       - ./backups:/backups
+    # Script içerisindeki ayarları doğrudan .env dosyasından çekiyoruz
     command: >
       /bin/sh -c "
         echo 'Yedekleme servisi basladi.';
         while true; do
           TIMESTAMP=$$(date +'%Y-%m-%d_%H-%M-%S');
           echo \"Yedekleme basliyor: sf5-backup-$${TIMESTAMP}.tar.gz\";
+          
           tar -czf /backups/sf5-backup-$${TIMESTAMP}.tar.gz -C /server .;
-          echo \"Yedekleme tamamlandi. 7 gunden eski yedekler temizleniyor...\";
-          find /backups/ -type f -name '*.tar.gz' -mtime +7 -delete;
-          echo \"Beklemeye geciliyor (12 saat)...\";
-          sleep 43200;
+          
+          echo \"Yedekleme tamamlandi. ${BACKUP_RETENTION_DAYS} gunden eski yedekler temizleniyor...\";
+          find /backups/ -type f -name '*.tar.gz' -mtime +${BACKUP_RETENTION_DAYS} -delete;
+          
+          echo \"Beklemeye geciliyor (${BACKUP_INTERVAL} saniye)...\";
+          sleep ${BACKUP_INTERVAL};
         done
       "
