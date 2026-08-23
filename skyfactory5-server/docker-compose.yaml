@@ -1,9 +1,9 @@
-version: '3.8'
-
 services:
   skyfactory5:
     build: .
     container_name: sf5_server
+    networks:
+      - proxy
     ports:
       # Sol taraf (.env'den gelen) makinenizin portu, sağ taraf (25565) container'ın iç portudur.
       - "${HOST_PORT}:25565"
@@ -41,3 +41,8 @@ services:
           sleep ${BACKUP_INTERVAL};
         done
       "
+
+networks:
+  proxy:
+    external: true
+    name: home-network
