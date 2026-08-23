@@ -1,5 +1,5 @@
-# Temel imaj olarak Debian Trixie (slim versiyonu) kullanıyoruz
-FROM debian:trixie-slim
+# Temel imaj olarak Debian Bookworm (slim versiyonu) kullanıyoruz
+FROM debian:bookworm-slim
 
 # Java 17, arşiv ayıklamak için unzip ve indirme araçlarını kuruyoruz
 RUN apt-get update && \
