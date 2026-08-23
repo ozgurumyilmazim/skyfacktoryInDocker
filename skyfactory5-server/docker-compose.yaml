@@ -45,4 +45,3 @@ services:
 networks:
   proxy:
     external: true
-    name: home-network
