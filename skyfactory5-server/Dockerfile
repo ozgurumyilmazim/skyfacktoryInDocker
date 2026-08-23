@@ -22,9 +22,16 @@ RUN echo '#!/bin/bash\n\
     echo "Sunucu ZIP dosyasi bulundu: $ZIP_FILE. Arsiv aciliyor..."\n\
     unzip -o "$ZIP_FILE"\n\
     \n\
-    # Linux kurulum betigine (install.sh) calistirma izni ver ve calistir\n\
+    # Linux kurulum betigine (install.sh) calistirma izni ver \n\
     if [ -f "install.sh" ]; then\n\
     chmod +x install.sh\n\
+    \n\
+    # HeadlessException hatasini onlemek icin install.sh icindeki java komutuna\n\
+    # -Djava.awt.headless=true parametresini ekliyoruz.\n\
+    # Eger installer jar dosyasi barindiriyorsa, onu baslatirken bu komutu zorluyoruz.\n\
+    sed -i '"'"'s/java -jar/java -Djava.awt.headless=true -jar/g'"'"' install.sh\n\
+    \n\
+    echo "Kurulum (install.sh) baslatiliyor..."\n\
     ./install.sh\n\
     fi\n\
     else\n\
@@ -37,7 +44,7 @@ RUN echo '#!/bin/bash\n\
     echo "eula=true" > eula.txt\n\
     \n\
     # RAM ayarlarını docker-compose üzerinden alıp dosyaya yazıyoruz\n\
-    echo "-Xmx${SERVER_RAM}" > user_jvm_args.txt\n\
+    echo "-Xmx${SERVER_RAM} -Djava.awt.headless=true" > user_jvm_args.txt\n\
     \n\
     # Sunucuyu başlatma mantığı\n\
     if [ -f "run.sh" ]; then\n\
@@ -49,7 +56,7 @@ RUN echo '#!/bin/bash\n\
     echo "Sunucu baslatilamadi, jar dosyasi bulunamadi. Lutfen dosyalari kontrol edin."\n\
     sleep 60\n\
     else\n\
-    java @user_jvm_args.txt -jar $FORGE_JAR nogui\n\
+    java @user_jvm_args.txt -Djava.awt.headless=true -jar $FORGE_JAR nogui\n\
     fi\n\
     fi' > /start.sh
 
